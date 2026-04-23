@@ -20,7 +20,7 @@ export default function Admin() {
     }
   };
 
-  const handleFileUpload = (e: ChangeEvent<HTMLInputElement>, isThumbnail: boolean) => {
+  const handleFileUpload = (e: ChangeEvent<HTMLInputElement>, isThumbnail: boolean, section?: keyof Project) => {
     const files = e.target.files;
     if (!files || !editingProject) return;
 
@@ -30,12 +30,14 @@ export default function Admin() {
         const base64String = reader.result as string;
         if (isThumbnail) {
           setEditingProject(prev => prev ? ({ ...prev, thumbnail: base64String }) : null);
-        } else {
+        } else if (section) {
           setEditingProject(prev => {
             if (!prev) return null;
+            const currentImages = Array.isArray(prev[section]) ? (prev[section] as string[]) : [];
+            if (currentImages.length >= 2) return prev;
             return {
               ...prev,
-              images: [...(prev.images || []), base64String]
+              [section]: [...currentImages, base64String]
             };
           });
         }
@@ -44,17 +46,59 @@ export default function Admin() {
     });
   };
 
-  const removeImage = (index: number) => {
+  const removeSectionImage = (section: keyof Project, index: number) => {
     if (!editingProject) return;
-    const newImages = [...editingProject.images];
+    const currentImages = Array.isArray(editingProject[section]) ? (editingProject[section] as string[]) : [];
+    const newImages = [...currentImages];
     newImages.splice(index, 1);
-    setEditingProject({ ...editingProject, images: newImages });
+    setEditingProject({ ...editingProject, [section]: newImages });
+  };
+
+  const startEditingProject = (p: Project) => {
+    // Normalize data: convert old string fields to arrays if necessary
+    const normalized: Project = {
+      ...p,
+      problem: Array.isArray(p.problem) ? p.problem : [],
+      hypothesis: Array.isArray(p.hypothesis) ? p.hypothesis : [],
+      decisionExecution: Array.isArray(p.decisionExecution) ? p.decisionExecution : [],
+      result: Array.isArray(p.result) ? p.result : [],
+      insight: Array.isArray(p.insight) ? p.insight : [],
+    };
+    setEditingProject(normalized);
   };
 
   const saveProject = () => {
     if (!editingProject) return;
-    updateProjects(projects.map(p => p.id === editingProject.id ? editingProject : p));
+    if (editingProject.id.startsWith('new-')) {
+      const newProject = { ...editingProject, id: Math.random().toString(36).substr(2, 9) };
+      updateProjects([newProject, ...projects]);
+    } else {
+      updateProjects(projects.map(p => p.id === editingProject.id ? editingProject : p));
+    }
     setEditingProject(null);
+  };
+
+  const createNewProject = () => {
+    const newProject: Project = {
+      id: `new-${Date.now()}`,
+      slug: '',
+      title: '',
+      summary: '',
+      thumbnail: '',
+      problem: [],
+      hypothesis: [],
+      decisionExecution: [],
+      result: [],
+      insight: [],
+      published: true
+    };
+    setEditingProject(newProject);
+  };
+
+  const deleteProject = (id: string) => {
+    if (window.confirm('프로젝트를 삭제하시겠습니까?')) {
+      updateProjects(projects.filter(p => p.id !== id));
+    }
   };
 
   const handleLogFileUpload = (e: ChangeEvent<HTMLInputElement>) => {
@@ -191,7 +235,7 @@ export default function Admin() {
                     {editingProject.thumbnail ? (
                       <img src={editingProject.thumbnail} className="w-full h-auto object-contain" />
                     ) : (
-                      <div className="w-full h-full flex flex-col items-center justify-center text-neutral-300">
+                      <div className="w-full h-full flex flex-col items-center justify-center text-neutral-300 py-10">
                         <ImageIcon size={24} />
                       </div>
                     )}
@@ -203,46 +247,45 @@ export default function Admin() {
                 </div>
               </div>
 
-              {/* Multiple Images Upload */}
-              <div>
-                <label className="text-[10px] font-bold text-neutral-400 uppercase mb-4 block tracking-wider">Additional Gallery Images</label>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                  {editingProject.images?.map((img, idx) => (
-                    <div key={idx} className="relative rounded-md overflow-hidden group border border-neutral-100">
-                      <img src={img} className="w-full h-auto object-contain" />
-                      <button 
-                        onClick={() => removeImage(idx)}
-                        className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <X size={12} />
-                      </button>
+              {/* Detail Sections (Images only) */}
+              <div className="space-y-10 pt-4">
+                {([
+                  { key: 'problem', label: '01. Problem' },
+                  { key: 'hypothesis', label: '02. Hypothesis' },
+                  { key: 'decisionExecution', label: '03. Decision & Execution' },
+                  { key: 'result', label: '04. Result' },
+                  { key: 'insight', label: '05. Insight' },
+                ] as const).map((section) => (
+                  <div key={section.key} className="border-t border-neutral-100 pt-8">
+                    <label className="text-[10px] font-bold text-neutral-400 uppercase mb-4 block tracking-wider">{section.label}</label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                      {Array.isArray(editingProject[section.key]) && (editingProject[section.key] as string[]).map((img, idx) => (
+                        <div key={idx} className="relative rounded-md overflow-hidden group border border-neutral-200 bg-neutral-50 h-32">
+                          <img src={img} className="w-full h-full object-contain" />
+                          <button 
+                            onClick={() => removeSectionImage(section.key, idx)}
+                            className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <X size={10} />
+                          </button>
+                        </div>
+                      ))}
+                      {(Array.isArray(editingProject[section.key]) ? (editingProject[section.key] as string[]) : []).length < 2 && (
+                        <label className="cursor-pointer rounded-md border-2 border-dashed border-neutral-200 flex flex-col items-center justify-center text-neutral-400 hover:border-brand hover:text-brand transition-all p-4 h-32">
+                          <Plus size={20} />
+                          <span className="text-[10px] font-bold mt-2 text-center leading-tight">이미지 추가<br/>(최대 2장)</span>
+                          <input 
+                            type="file" 
+                            className="hidden" 
+                            accept="image/*" 
+                            multiple 
+                            onChange={(e) => handleFileUpload(e, false, section.key)} 
+                          />
+                        </label>
+                      )}
                     </div>
-                  ))}
-                  <label className="cursor-pointer rounded-md border-2 border-dashed border-neutral-200 flex flex-col items-center justify-center text-neutral-400 hover:border-brand hover:text-brand transition-all p-4">
-                    <Plus size={24} />
-                    <span className="text-[10px] font-bold mt-2 text-center">이미지 추가</span>
-                    <input type="file" className="hidden" accept="image/*" multiple onChange={(e) => handleFileUpload(e, false)} />
-                  </label>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div>
-                  <label className="text-[10px] font-bold text-neutral-400 uppercase mb-2 block tracking-wider">Problem</label>
-                  <textarea
-                    value={editingProject.problem}
-                    onChange={(e) => setEditingProject({...editingProject, problem: e.target.value})}
-                    className="w-full px-4 py-3 border border-neutral-200 rounded-md focus:outline-none focus:ring-1 focus:ring-brand font-normal h-32"
-                  />
-                </div>
-                <div>
-                  <label className="text-[10px] font-bold text-neutral-400 uppercase mb-2 block tracking-wider">Hypothesis</label>
-                  <textarea
-                    value={editingProject.hypothesis}
-                    onChange={(e) => setEditingProject({...editingProject, hypothesis: e.target.value})}
-                    className="w-full px-4 py-3 border border-neutral-200 rounded-md focus:outline-none focus:ring-1 focus:ring-brand font-normal h-32"
-                  />
-                </div>
+                  </div>
+                ))}
               </div>
 
               <div className="flex justify-end gap-3 pt-8">
@@ -414,7 +457,10 @@ export default function Admin() {
           <div className="p-8">
             <div className="flex justify-between items-center mb-8">
               <h2 className="text-lg font-bold">Selected Works</h2>
-              <button className="flex items-center gap-2 bg-brand text-white px-[10px] py-[4px] rounded-md text-xs font-bold hover:scale-105 transition-transform">
+              <button 
+                onClick={createNewProject}
+                className="flex items-center gap-2 bg-brand text-white px-[10px] py-[4px] rounded-md text-xs font-bold hover:scale-105 transition-transform"
+              >
                 <Plus size={14} /> 프로젝트 추가
               </button>
             </div>
@@ -430,15 +476,21 @@ export default function Admin() {
                   </div>
                   <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button 
-                      onClick={() => setEditingProject(p)}
+                      onClick={() => startEditingProject(p)}
                       className="p-1.5 hover:bg-neutral-200 rounded-md text-neutral-600 transition-colors"
                     >
                       <Edit3 size={14} />
                     </button>
-                    <button className="p-1.5 hover:bg-neutral-200 rounded-md text-neutral-600 transition-colors">
+                    <button 
+                      onClick={() => updateProjects(projects.map(item => item.id === p.id ? { ...item, published: !item.published } : item))}
+                      className="p-1.5 hover:bg-neutral-200 rounded-md text-neutral-600 transition-colors"
+                    >
                       {p.published ? <Eye size={14} /> : <EyeOff size={14} />}
                     </button>
-                    <button className="p-1.5 hover:bg-red-50 rounded-md text-red-500 transition-colors">
+                    <button 
+                      onClick={() => deleteProject(p.id)}
+                      className="p-1.5 hover:bg-red-50 rounded-md text-red-500 transition-colors"
+                    >
                       <Trash2 size={14} />
                     </button>
                   </div>

@@ -9,13 +9,11 @@ export interface Project {
   title: string;
   summary: string;
   thumbnail: string;
-  images: string[]; // Support multiple images
-  problem: string;
-  hypothesis: string;
-  decision: string;
-  execution: string;
-  result: string;
-  insight: string;
+  problem: string[]; // 01. Problem (Images)
+  hypothesis: string[]; // 02. Hypothesis (Images)
+  decisionExecution: string[]; // 03. Decision & Execution (Images)
+  result: string[]; // 04. Result (Images)
+  insight: string[]; // 05. Insight (Images)
   published: boolean;
 }
 
