@@ -53,7 +53,7 @@ export default function Home() {
       {/* Selected Work */}
       <section id="work" className="py-20 border-t border-neutral-100">
         <h2 className="text-xl font-bold uppercase tracking-tight text-black mb-12">Selected Work</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-12">
           {projects.filter(p => p.published).map((project, idx) => (
             <motion.div
               key={project.id}

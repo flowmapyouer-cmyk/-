@@ -16,7 +16,7 @@ export default function Work() {
         </p>
       </header>
 
-      <section className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-24">
+      <section className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-24">
         {projects.filter(p => p.published).map((project, idx) => (
           <motion.div
             key={project.id}

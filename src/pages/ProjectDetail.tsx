@@ -57,7 +57,7 @@ export default function ProjectDetail() {
           <p className="text-2xl font-display font-bold text-black leading-tight mb-12">{project.result}</p>
           
           {project.images && project.images.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-12">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-12">
               {project.images.map((img, idx) => (
                 <div key={idx} className="aspect-square rounded-md overflow-hidden border border-neutral-200 bg-white">
                   <img src={img} alt={`Gallery ${idx}`} className="w-full h-full object-cover" />
