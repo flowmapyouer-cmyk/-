@@ -187,9 +187,9 @@ export default function Admin() {
               <div>
                 <label className="text-[10px] font-bold text-neutral-400 uppercase mb-4 block tracking-wider">Thumbnail Image</label>
                 <div className="flex items-start gap-6">
-                  <div className="w-40 aspect-video rounded-md overflow-hidden bg-neutral-100 border border-neutral-200 shadow-inner">
+                  <div className="w-40 rounded-md overflow-hidden bg-neutral-100 border border-neutral-200 shadow-inner">
                     {editingProject.thumbnail ? (
-                      <img src={editingProject.thumbnail} className="w-full h-full object-cover" />
+                      <img src={editingProject.thumbnail} className="w-full h-auto object-contain" />
                     ) : (
                       <div className="w-full h-full flex flex-col items-center justify-center text-neutral-300">
                         <ImageIcon size={24} />
@@ -208,8 +208,8 @@ export default function Admin() {
                 <label className="text-[10px] font-bold text-neutral-400 uppercase mb-4 block tracking-wider">Additional Gallery Images</label>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                   {editingProject.images?.map((img, idx) => (
-                    <div key={idx} className="relative aspect-square rounded-md overflow-hidden group border border-neutral-100">
-                      <img src={img} className="w-full h-full object-cover" />
+                    <div key={idx} className="relative rounded-md overflow-hidden group border border-neutral-100">
+                      <img src={img} className="w-full h-auto object-contain" />
                       <button 
                         onClick={() => removeImage(idx)}
                         className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
@@ -218,9 +218,9 @@ export default function Admin() {
                       </button>
                     </div>
                   ))}
-                  <label className="cursor-pointer aspect-square rounded-md border-2 border-dashed border-neutral-200 flex flex-col items-center justify-center text-neutral-400 hover:border-brand hover:text-brand transition-all">
+                  <label className="cursor-pointer rounded-md border-2 border-dashed border-neutral-200 flex flex-col items-center justify-center text-neutral-400 hover:border-brand hover:text-brand transition-all p-4">
                     <Plus size={24} />
-                    <span className="text-[10px] font-bold mt-2">이미지 추가</span>
+                    <span className="text-[10px] font-bold mt-2 text-center">이미지 추가</span>
                     <input type="file" className="hidden" accept="image/*" multiple onChange={(e) => handleFileUpload(e, false)} />
                   </label>
                 </div>
@@ -422,7 +422,7 @@ export default function Admin() {
               {projects.map((p) => (
                 <div key={p.id} className="flex items-center justify-between p-3 border border-neutral-100 rounded-md hover:bg-neutral-50 group transition-all">
                   <div className="flex items-center gap-4">
-                    <img src={p.thumbnail} alt="" className="w-14 h-10 object-cover rounded-md bg-neutral-200" />
+                    <img src={p.thumbnail} alt="" className="w-14 h-10 object-contain rounded-md bg-neutral-200" />
                     <div>
                       <h3 className="font-bold text-sm tracking-tight">{p.title}</h3>
                       <span className="text-[10px] text-neutral-400 font-bold">/{p.slug}</span>

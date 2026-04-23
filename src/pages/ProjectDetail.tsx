@@ -39,8 +39,8 @@ export default function ProjectDetail() {
         </p>
       </header>
 
-      <div className="aspect-video w-full rounded-md overflow-hidden mb-20 bg-neutral-100">
-        <img src={project.thumbnail} alt={project.title} className="w-full h-full object-cover" />
+      <div className="w-full rounded-md overflow-hidden mb-20 bg-neutral-100">
+        <img src={project.thumbnail} alt={project.title} className="w-full h-auto object-contain" />
       </div>
 
       <article className="space-y-24 pb-32">
@@ -69,8 +69,8 @@ export default function ProjectDetail() {
           {project.images && project.images.length > 0 && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-12">
               {project.images.map((img, idx) => (
-                <div key={idx} className="aspect-square rounded-md overflow-hidden border border-neutral-200 bg-white">
-                  <img src={img} alt={`Gallery ${idx}`} className="w-full h-full object-cover" />
+                <div key={idx} className="w-full rounded-md overflow-hidden border border-neutral-200 bg-white">
+                  <img src={img} alt={`Gallery ${idx}`} className="w-full h-auto object-contain" />
                 </div>
               ))}
             </div>

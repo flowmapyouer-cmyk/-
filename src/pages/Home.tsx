@@ -63,11 +63,11 @@ export default function Home() {
               transition={{ delay: idx * 0.1, duration: 0.6 }}
             >
               <Link to={`/project/${project.slug}`} className="group block">
-                <div className="aspect-[4/3] overflow-hidden bg-neutral-100 mb-6 rounded-md">
+                <div className="overflow-hidden bg-neutral-100 mb-6 rounded-md">
                   <img
                     src={project.thumbnail}
                     alt={project.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                    className="w-full h-auto object-contain group-hover:scale-105 transition-transform duration-700"
                   />
                 </div>
                 <h3 className="text-xl font-bold mb-2 group-hover:underline">{project.title}</h3>
