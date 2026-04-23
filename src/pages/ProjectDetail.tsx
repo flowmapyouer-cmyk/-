@@ -1,14 +1,24 @@
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useData } from '../context/DataContext';
+import { useMemo } from 'react';
 
 export default function ProjectDetail() {
   const { slug } = useParams();
   const { projects } = useData();
-  const project = projects.find(p => p.slug === slug);
+  
+  const publishedProjects = useMemo(() => {
+    return projects.filter(p => p.published);
+  }, [projects]);
 
-  if (!project) return <div>Project not found</div>;
+  const currentIndex = publishedProjects.findIndex(p => p.slug === slug);
+  const project = publishedProjects[currentIndex];
+
+  const prevProject = currentIndex > 0 ? publishedProjects[currentIndex - 1] : null;
+  const nextProject = currentIndex < publishedProjects.length - 1 ? publishedProjects[currentIndex + 1] : null;
+
+  if (!project) return <div className="min-h-screen flex items-center justify-center font-bold">프로젝트를 찾을 수 없습니다.</div>;
 
   return (
     <motion.div
@@ -16,8 +26,8 @@ export default function ProjectDetail() {
       animate={{ opacity: 1 }}
       className="max-w-screen-md mx-auto px-6 py-24"
     >
-      <Link to="/" className="inline-flex items-center gap-2 text-sm text-neutral-400 hover:text-black mb-12 transition-colors">
-        <ArrowLeft size={16} /> 홈으로 돌아가기
+      <Link to="/work" className="inline-flex items-center gap-2 text-sm text-neutral-400 hover:text-black mb-12 transition-colors font-bold uppercase tracking-tight">
+        <ArrowLeft size={16} /> 전체 프로젝트로 돌아가기
       </Link>
 
       <header className="mb-20">
@@ -76,9 +86,41 @@ export default function ProjectDetail() {
       </article>
 
       <footer className="pt-24 border-t border-neutral-100">
-        <div className="flex justify-between items-center text-sm mb-20">
-          <Link to="/" className="font-medium hover:underline">← 이전 프로젝트</Link>
-          <Link to="/" className="font-medium hover:underline">다음 프로젝트 →</Link>
+        <div className="flex justify-between items-center mb-20">
+          <div>
+            {prevProject ? (
+              <Link to={`/project/${prevProject.slug}`} className="group block">
+                <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest block mb-1">이전 프로젝트</span>
+                <span className="text-sm font-bold group-hover:text-brand transition-colors flex items-center gap-1">
+                  <ChevronLeft size={16} /> {prevProject.title}
+                </span>
+              </Link>
+            ) : (
+              <div className="opacity-20 pointer-events-none">
+                <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest block mb-1">이전 프로젝트</span>
+                <span className="text-sm font-bold flex items-center gap-1">
+                  <ChevronLeft size={16} /> 첫 번째 프로젝트입니다.
+                </span>
+              </div>
+            )}
+          </div>
+          <div className="text-right">
+            {nextProject ? (
+              <Link to={`/project/${nextProject.slug}`} className="group block">
+                <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest block mb-1">다음 프로젝트</span>
+                <span className="text-sm font-bold group-hover:text-brand transition-colors flex items-center gap-1 justify-end">
+                  {nextProject.title} <ChevronRight size={16} />
+                </span>
+              </Link>
+            ) : (
+              <div className="opacity-20 pointer-events-none">
+                <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest block mb-1">다음 프로젝트</span>
+                <span className="text-sm font-bold flex items-center gap-1 justify-end">
+                  마지막 프로젝트입니다. <ChevronRight size={16} />
+                </span>
+              </div>
+            )}
+          </div>
         </div>
         <div className="pt-20">
           <div className="h-0.5 bg-black w-full mb-8" />
