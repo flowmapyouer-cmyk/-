@@ -28,6 +28,7 @@ export interface WorkLog {
   content: string; // Markdown supported
   excerpt: string;
   published: boolean;
+  pinned?: boolean;
 }
 
 export interface ContactInfo {

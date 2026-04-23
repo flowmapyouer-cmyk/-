@@ -25,7 +25,7 @@ export default function Work() {
             transition={{ delay: idx * 0.1, duration: 0.6 }}
           >
             <Link to={`/project/${project.slug}`} className="group block">
-              <div className="aspect-[4/3] overflow-hidden bg-neutral-100 mb-6 rounded-2xl relative">
+              <div className="aspect-[4/3] overflow-hidden bg-neutral-100 mb-6 rounded-md relative">
                 <img
                   src={project.thumbnail}
                   alt={project.title}
@@ -39,6 +39,14 @@ export default function Work() {
           </motion.div>
         ))}
       </section>
+
+      <footer className="mt-40">
+        <div className="h-0.5 bg-black w-full mb-8" />
+        <div className="flex justify-between items-center text-[10px] font-bold text-neutral-400 uppercase tracking-widest">
+          <span>© 2026 HA YOU</span>
+          <Link to="/admin" className="hover:text-black transition-colors">admin</Link>
+        </div>
+      </footer>
     </main>
   );
 }

@@ -26,7 +26,7 @@ export default function WorkLogDetail() {
       <header className="mb-16">
         <div className="flex gap-2 mb-6">
           {log.tags.map(tag => (
-            <span key={tag} className="text-[8px] font-bold uppercase tracking-tighter bg-neutral-100 px-2 py-1 rounded text-neutral-600">
+            <span key={tag} className="text-[8px] font-bold uppercase tracking-tighter bg-neutral-100 px-2 py-1 rounded-md text-neutral-600">
               {tag}
             </span>
           ))}
@@ -46,9 +46,16 @@ export default function WorkLogDetail() {
       </div>
 
       <footer className="mt-32 pt-12 border-t border-neutral-100">
-        <div className="flex justify-between items-center text-sm">
+        <div className="flex justify-between items-center text-sm mb-20">
           <Link to="/" className="font-medium hover:underline">PREVIOUS POST</Link>
           <Link to="/" className="font-medium hover:underline">NEXT POST</Link>
+        </div>
+        <div className="pt-20">
+          <div className="h-0.5 bg-black w-full mb-8" />
+          <div className="flex justify-between items-center text-[10px] font-bold text-neutral-400 uppercase tracking-widest">
+            <span>© 2026 HA YOU</span>
+            <Link to="/admin" className="hover:text-black transition-colors">admin</Link>
+          </div>
         </div>
       </footer>
     </motion.div>

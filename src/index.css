@@ -39,3 +39,7 @@
   @apply mb-4 leading-relaxed text-neutral-700;
 }
 
+.markdown-body img {
+  @apply rounded-md overflow-hidden;
+}
+

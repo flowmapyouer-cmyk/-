@@ -9,10 +9,8 @@ export default function Navigation() {
           유하영
         </Link>
         <div className="flex gap-8 items-center text-sm font-bold tracking-tight">
-          <Link to="/" className="hover:text-brand transition-colors">Home</Link>
-          <Link to="/work" className="hover:text-brand transition-colors">Work</Link>
-          <Link to="/logs" className="hover:text-brand transition-colors">Log</Link>
-          <Link to="/admin" className="px-3 py-1 bg-neutral-100 rounded-full hover:bg-neutral-200 transition-colors">Admin</Link>
+          <Link to="/work" className="hover:text-brand transition-colors">프로젝트</Link>
+          <Link to="/logs" className="hover:text-brand transition-colors">로그</Link>
         </div>
       </div>
     </nav>

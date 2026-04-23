@@ -1,6 +1,6 @@
 import { useState, FormEvent, ChangeEvent } from 'react';
 import { Project, WorkLog, ContactInfo } from '../types';
-import { Plus, Trash2, Edit3, Save, X, Eye, EyeOff, Upload, Image as ImageIcon } from 'lucide-react';
+import { Plus, Trash2, Edit3, Save, X, Eye, EyeOff, Upload, Image as ImageIcon, Pin, PinOff } from 'lucide-react';
 import { useData } from '../context/DataContext';
 
 export default function Admin() {
@@ -107,19 +107,31 @@ export default function Admin() {
     setEditingLog(newLog);
   };
 
+  const toggleLogPin = (id: string) => {
+    const log = logs.find(l => l.id === id);
+    if (!log) return;
+    
+    if (!log.pinned && logs.filter(l => l.pinned).length >= 3) {
+      alert('고정 항목은 최대 3개까지만 설정할 수 있습니다.');
+      return;
+    }
+    
+    updateLogs(logs.map(l => l.id === id ? { ...l, pinned: !l.pinned } : l));
+  };
+
   if (!isAuthorized) {
     return (
       <div className="min-h-[80vh] flex items-center justify-center bg-neutral-50 px-6">
-        <form onSubmit={handleLogin} className="bg-white p-8 rounded-2xl border border-neutral-200 shadow-sm w-full max-w-sm">
+        <form onSubmit={handleLogin} className="bg-white p-8 rounded-md border border-neutral-200 shadow-sm w-full max-w-sm">
           <h1 className="text-xl font-bold mb-6 text-center uppercase tracking-tight">Admin Access</h1>
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Enter password"
-            className="w-full px-4 py-3 border border-neutral-200 rounded-lg mb-4 focus:outline-none focus:ring-1 focus:ring-brand font-normal"
+            className="w-full px-4 py-3 border border-neutral-200 rounded-md mb-4 focus:outline-none focus:ring-1 focus:ring-brand font-normal"
           />
-          <button type="submit" className="w-full bg-brand text-white py-[9px] rounded-lg font-bold hover:scale-[1.02] transition-transform">
+          <button type="submit" className="w-full bg-brand text-white py-[9px] rounded-md font-bold hover:scale-[1.02] transition-transform">
             LOGIN
           </button>
         </form>
@@ -132,7 +144,7 @@ export default function Admin() {
       {/* Edit Modal */}
       {editingProject && (
         <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-6">
-          <div className="bg-white rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl">
+          <div className="bg-white rounded-md w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl">
             <div className="sticky top-0 bg-white/80 backdrop-blur-md px-8 py-6 border-b border-neutral-100 flex justify-between items-center z-10">
               <h2 className="text-xl font-bold uppercase tracking-tight">Edit Project</h2>
               <button onClick={() => setEditingProject(null)} className="p-2 hover:bg-neutral-100 rounded-full transition-colors">
@@ -148,7 +160,7 @@ export default function Admin() {
                     type="text"
                     value={editingProject.title}
                     onChange={(e) => setEditingProject({...editingProject, title: e.target.value})}
-                    className="w-full px-4 py-3 border border-neutral-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-brand font-normal"
+                    className="w-full px-4 py-3 border border-neutral-200 rounded-md focus:outline-none focus:ring-1 focus:ring-brand font-normal"
                   />
                 </div>
                 <div>
@@ -157,7 +169,7 @@ export default function Admin() {
                     type="text"
                     value={editingProject.slug}
                     onChange={(e) => setEditingProject({...editingProject, slug: e.target.value})}
-                    className="w-full px-4 py-3 border border-neutral-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-brand font-normal"
+                    className="w-full px-4 py-3 border border-neutral-200 rounded-md focus:outline-none focus:ring-1 focus:ring-brand font-normal"
                   />
                 </div>
               </div>
@@ -167,7 +179,7 @@ export default function Admin() {
                 <textarea
                   value={editingProject.summary}
                   onChange={(e) => setEditingProject({...editingProject, summary: e.target.value})}
-                  className="w-full px-4 py-3 border border-neutral-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-brand font-normal h-24"
+                  className="w-full px-4 py-3 border border-neutral-200 rounded-md focus:outline-none focus:ring-1 focus:ring-brand font-normal h-24"
                 />
               </div>
 
@@ -175,7 +187,7 @@ export default function Admin() {
               <div>
                 <label className="text-[10px] font-bold text-neutral-400 uppercase mb-4 block tracking-wider">Thumbnail Image</label>
                 <div className="flex items-start gap-6">
-                  <div className="w-40 aspect-video rounded-xl overflow-hidden bg-neutral-100 border border-neutral-200 shadow-inner">
+                  <div className="w-40 aspect-video rounded-md overflow-hidden bg-neutral-100 border border-neutral-200 shadow-inner">
                     {editingProject.thumbnail ? (
                       <img src={editingProject.thumbnail} className="w-full h-full object-cover" />
                     ) : (
@@ -184,7 +196,7 @@ export default function Admin() {
                       </div>
                     )}
                   </div>
-                  <label className="cursor-pointer bg-neutral-100 px-6 py-3 rounded-xl font-bold text-sm hover:bg-neutral-200 transition-colors flex items-center gap-2">
+                  <label className="cursor-pointer bg-neutral-100 px-6 py-3 rounded-md font-bold text-sm hover:bg-neutral-200 transition-colors flex items-center gap-2">
                     <Upload size={16} /> 썸네일 업로드
                     <input type="file" className="hidden" accept="image/*" onChange={(e) => handleFileUpload(e, true)} />
                   </label>
@@ -196,7 +208,7 @@ export default function Admin() {
                 <label className="text-[10px] font-bold text-neutral-400 uppercase mb-4 block tracking-wider">Additional Gallery Images</label>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                   {editingProject.images?.map((img, idx) => (
-                    <div key={idx} className="relative aspect-square rounded-xl overflow-hidden group border border-neutral-100">
+                    <div key={idx} className="relative aspect-square rounded-md overflow-hidden group border border-neutral-100">
                       <img src={img} className="w-full h-full object-cover" />
                       <button 
                         onClick={() => removeImage(idx)}
@@ -206,7 +218,7 @@ export default function Admin() {
                       </button>
                     </div>
                   ))}
-                  <label className="cursor-pointer aspect-square rounded-xl border-2 border-dashed border-neutral-200 flex flex-col items-center justify-center text-neutral-400 hover:border-brand hover:text-brand transition-all">
+                  <label className="cursor-pointer aspect-square rounded-md border-2 border-dashed border-neutral-200 flex flex-col items-center justify-center text-neutral-400 hover:border-brand hover:text-brand transition-all">
                     <Plus size={24} />
                     <span className="text-[10px] font-bold mt-2">이미지 추가</span>
                     <input type="file" className="hidden" accept="image/*" multiple onChange={(e) => handleFileUpload(e, false)} />
@@ -220,7 +232,7 @@ export default function Admin() {
                   <textarea
                     value={editingProject.problem}
                     onChange={(e) => setEditingProject({...editingProject, problem: e.target.value})}
-                    className="w-full px-4 py-3 border border-neutral-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-brand font-normal h-32"
+                    className="w-full px-4 py-3 border border-neutral-200 rounded-md focus:outline-none focus:ring-1 focus:ring-brand font-normal h-32"
                   />
                 </div>
                 <div>
@@ -228,7 +240,7 @@ export default function Admin() {
                   <textarea
                     value={editingProject.hypothesis}
                     onChange={(e) => setEditingProject({...editingProject, hypothesis: e.target.value})}
-                    className="w-full px-4 py-3 border border-neutral-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-brand font-normal h-32"
+                    className="w-full px-4 py-3 border border-neutral-200 rounded-md focus:outline-none focus:ring-1 focus:ring-brand font-normal h-32"
                   />
                 </div>
               </div>
@@ -236,13 +248,13 @@ export default function Admin() {
               <div className="flex justify-end gap-3 pt-8">
                 <button 
                   onClick={() => setEditingProject(null)}
-                  className="px-8 py-3 rounded-xl font-bold bg-neutral-100 hover:bg-neutral-200 transition-colors"
+                  className="px-8 py-3 rounded-md font-bold bg-neutral-100 hover:bg-neutral-200 transition-colors"
                 >
                   취소
                 </button>
                 <button 
                   onClick={saveProject}
-                  className="px-10 py-3 rounded-xl font-bold bg-brand text-white hover:scale-[1.02] transition-transform shadow-lg shadow-brand/20"
+                  className="px-10 py-3 rounded-md font-bold bg-brand text-white hover:scale-[1.02] transition-transform shadow-lg shadow-brand/20"
                 >
                   저장하기
                 </button>
@@ -255,7 +267,7 @@ export default function Admin() {
       {/* Log Edit Modal */}
       {editingLog && (
         <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-6">
-          <div className="bg-white rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl">
+          <div className="bg-white rounded-md w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl">
             <div className="sticky top-0 bg-white/80 backdrop-blur-md px-8 py-6 border-b border-neutral-100 flex justify-between items-center z-10">
               <h2 className="text-xl font-bold uppercase tracking-tight">Edit Work Log</h2>
               <button onClick={() => setEditingLog(null)} className="p-2 hover:bg-neutral-100 rounded-full transition-colors">
@@ -271,7 +283,7 @@ export default function Admin() {
                     type="text"
                     value={editingLog.title}
                     onChange={(e) => setEditingLog({...editingLog, title: e.target.value})}
-                    className="w-full px-4 py-3 border border-neutral-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-brand"
+                    className="w-full px-4 py-3 border border-neutral-200 rounded-md focus:outline-none focus:ring-1 focus:ring-brand"
                   />
                 </div>
                 <div>
@@ -280,7 +292,7 @@ export default function Admin() {
                     type="text"
                     value={editingLog.slug}
                     onChange={(e) => setEditingLog({...editingLog, slug: e.target.value})}
-                    className="w-full px-4 py-3 border border-neutral-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-brand"
+                    className="w-full px-4 py-3 border border-neutral-200 rounded-md focus:outline-none focus:ring-1 focus:ring-brand"
                   />
                 </div>
               </div>
@@ -292,7 +304,7 @@ export default function Admin() {
                     type="text"
                     value={editingLog.date}
                     onChange={(e) => setEditingLog({...editingLog, date: e.target.value})}
-                    className="w-full px-4 py-3 border border-neutral-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-brand"
+                    className="w-full px-4 py-3 border border-neutral-200 rounded-md focus:outline-none focus:ring-1 focus:ring-brand"
                   />
                 </div>
                 <div>
@@ -301,9 +313,30 @@ export default function Admin() {
                     type="text"
                     value={editingLog.tags.join(', ')}
                     onChange={(e) => setEditingLog({...editingLog, tags: e.target.value.split(',').map(t => t.trim())})}
-                    className="w-full px-4 py-3 border border-neutral-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-brand"
+                    className="w-full px-4 py-3 border border-neutral-200 rounded-md focus:outline-none focus:ring-1 focus:ring-brand"
                   />
                 </div>
+              </div>
+
+              <div className="flex items-center gap-4 py-4 bg-neutral-50 px-6 rounded-md border border-neutral-100">
+                <label className="flex items-center gap-3 cursor-pointer group">
+                  <div className={`w-10 h-6 rounded-full p-1 transition-colors ${editingLog.pinned ? 'bg-brand' : 'bg-neutral-200'}`}>
+                    <div className={`w-4 h-4 bg-white rounded-full transition-transform ${editingLog.pinned ? 'translate-x-4' : 'translate-x-0'}`} />
+                  </div>
+                  <input
+                    type="checkbox"
+                    className="hidden"
+                    checked={editingLog.pinned || false}
+                    onChange={(e) => {
+                      if (e.target.checked && logs.filter(l => l.pinned && l.id !== editingLog.id).length >= 3) {
+                        alert('고정 항목은 최대 3개까지만 설정할 수 있습니다.');
+                        return;
+                      }
+                      setEditingLog({...editingLog, pinned: e.target.checked});
+                    }}
+                  />
+                  <span className="text-sm font-bold text-neutral-700">이 로그를 상단에 고정하기 (최대 3개)</span>
+                </label>
               </div>
 
               <div>
@@ -318,9 +351,9 @@ export default function Admin() {
                   value={editingLog.content}
                   onChange={(e) => setEditingLog({...editingLog, content: e.target.value})}
                   placeholder="# 제목\n\n내용을 입력하세요..."
-                  className="w-full px-4 py-3 border border-neutral-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-brand font-mono text-sm h-64"
+                  className="w-full px-4 py-3 border border-neutral-200 rounded-md focus:outline-none focus:ring-1 focus:ring-brand font-mono text-sm h-64"
                 />
-                <div className="mt-2 p-4 bg-neutral-50 rounded-xl border border-neutral-100">
+                <div className="mt-2 p-4 bg-neutral-50 rounded-md border border-neutral-100">
                   <h4 className="text-[9px] font-bold text-neutral-400 uppercase mb-2">Markdown Tips</h4>
                   <div className="grid grid-cols-2 gap-4 text-[11px] text-neutral-500 font-normal">
                     <div>
@@ -340,13 +373,13 @@ export default function Admin() {
               <div className="flex justify-end gap-3 pt-8">
                 <button 
                   onClick={() => setEditingLog(null)}
-                  className="px-8 py-3 rounded-xl font-bold bg-neutral-100 hover:bg-neutral-200 transition-colors"
+                  className="px-8 py-3 rounded-md font-bold bg-neutral-100 hover:bg-neutral-200 transition-colors"
                 >
                   취소
                 </button>
                 <button 
                   onClick={saveLog}
-                  className="px-10 py-3 rounded-xl font-bold bg-brand text-white hover:scale-[1.02] transition-transform shadow-lg shadow-brand/20"
+                  className="px-10 py-3 rounded-md font-bold bg-brand text-white hover:scale-[1.02] transition-transform shadow-lg shadow-brand/20"
                 >
                   저장하기
                 </button>
@@ -366,7 +399,7 @@ export default function Admin() {
             <button
               key={tab}
               onClick={() => setActiveTab(tab as any)}
-              className={`px-[13px] py-[5px] rounded-lg text-xs font-bold transition-colors ${
+              className={`px-[13px] py-[5px] rounded-md text-xs font-bold transition-colors ${
                 activeTab === tab ? 'bg-brand text-white' : 'bg-neutral-100 hover:bg-neutral-200'
               }`}
             >
@@ -376,18 +409,18 @@ export default function Admin() {
         </div>
       </header>
 
-      <div className="bg-white border border-neutral-200 rounded-2xl overflow-hidden shadow-sm">
+      <div className="bg-white border border-neutral-200 rounded-md overflow-hidden shadow-sm">
         {activeTab === 'projects' && (
           <div className="p-8">
             <div className="flex justify-between items-center mb-8">
               <h2 className="text-lg font-bold">Selected Works</h2>
-              <button className="flex items-center gap-2 bg-brand text-white px-[10px] py-[4px] rounded-lg text-xs font-bold hover:scale-105 transition-transform">
+              <button className="flex items-center gap-2 bg-brand text-white px-[10px] py-[4px] rounded-md text-xs font-bold hover:scale-105 transition-transform">
                 <Plus size={14} /> 프로젝트 추가
               </button>
             </div>
             <div className="space-y-4">
               {projects.map((p) => (
-                <div key={p.id} className="flex items-center justify-between p-3 border border-neutral-100 rounded-xl hover:bg-neutral-50 group transition-all">
+                <div key={p.id} className="flex items-center justify-between p-3 border border-neutral-100 rounded-md hover:bg-neutral-50 group transition-all">
                   <div className="flex items-center gap-4">
                     <img src={p.thumbnail} alt="" className="w-14 h-10 object-cover rounded-md bg-neutral-200" />
                     <div>
@@ -398,14 +431,14 @@ export default function Admin() {
                   <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button 
                       onClick={() => setEditingProject(p)}
-                      className="p-1.5 hover:bg-neutral-200 rounded-lg text-neutral-600 transition-colors"
+                      className="p-1.5 hover:bg-neutral-200 rounded-md text-neutral-600 transition-colors"
                     >
                       <Edit3 size={14} />
                     </button>
-                    <button className="p-1.5 hover:bg-neutral-200 rounded-lg text-neutral-600 transition-colors">
+                    <button className="p-1.5 hover:bg-neutral-200 rounded-md text-neutral-600 transition-colors">
                       {p.published ? <Eye size={14} /> : <EyeOff size={14} />}
                     </button>
-                    <button className="p-1.5 hover:bg-red-50 rounded-lg text-red-500 transition-colors">
+                    <button className="p-1.5 hover:bg-red-50 rounded-md text-red-500 transition-colors">
                       <Trash2 size={14} />
                     </button>
                   </div>
@@ -421,14 +454,14 @@ export default function Admin() {
               <h2 className="text-lg font-bold">Work Logs</h2>
               <button 
                 onClick={createNewLog}
-                className="flex items-center gap-2 bg-brand text-white px-[10px] py-[4px] rounded-lg text-xs font-bold hover:scale-105 transition-transform"
+                className="flex items-center gap-2 bg-brand text-white px-[10px] py-[4px] rounded-md text-xs font-bold hover:scale-105 transition-transform"
               >
                 <Plus size={14} /> 새 로그 작성
               </button>
             </div>
             <div className="space-y-4">
               {logs.map((l) => (
-                <div key={l.id} className="flex items-center justify-between p-3 border border-neutral-100 rounded-xl hover:bg-neutral-50 group">
+                <div key={l.id} className="flex items-center justify-between p-3 border border-neutral-100 rounded-md hover:bg-neutral-50 group">
                   <div>
                     <h3 className="font-bold text-sm">{l.title}</h3>
                     <div className="flex gap-2 mt-1">
@@ -437,14 +470,21 @@ export default function Admin() {
                   </div>
                   <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button 
+                      onClick={() => toggleLogPin(l.id)}
+                      className={`p-1.5 rounded-md transition-colors ${l.pinned ? 'bg-brand text-white' : 'hover:bg-neutral-200 text-neutral-600'}`}
+                      title="상단 고정"
+                    >
+                      {l.pinned ? <PinOff size={14} /> : <Pin size={14} />}
+                    </button>
+                    <button 
                       onClick={() => setEditingLog(l)}
-                      className="p-1.5 hover:bg-neutral-200 rounded-lg text-neutral-600 transition-colors"
+                      className="p-1.5 hover:bg-neutral-200 rounded-md text-neutral-600 transition-colors"
                     >
                       <Edit3 size={14} />
                     </button>
                     <button 
                       onClick={() => deleteLog(l.id)}
-                      className="p-1.5 hover:bg-red-50 rounded-lg text-red-500 transition-colors"
+                      className="p-1.5 hover:bg-red-50 rounded-md text-red-500 transition-colors"
                     >
                       <Trash2 size={14} />
                     </button>
@@ -465,7 +505,7 @@ export default function Admin() {
                   type="email"
                   value={contact.email}
                   onChange={(e) => updateContact({...contact, email: e.target.value})}
-                  className="w-full px-3 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-brand font-normal text-sm"
+                  className="w-full px-3 py-2 border border-neutral-200 rounded-md focus:outline-none focus:ring-1 focus:ring-brand font-normal text-sm"
                 />
               </div>
               <div>
@@ -474,10 +514,10 @@ export default function Admin() {
                   type="text"
                   value={contact.ctaText}
                   onChange={(e) => updateContact({...contact, ctaText: e.target.value})}
-                  className="w-full px-3 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-brand font-normal text-sm"
+                  className="w-full px-3 py-2 border border-neutral-200 rounded-md focus:outline-none focus:ring-1 focus:ring-brand font-normal text-sm"
                 />
               </div>
-              <button className="bg-brand text-white px-[17px] py-[7px] rounded-lg text-xs font-bold flex items-center gap-2 hover:scale-[1.02] transition-transform">
+              <button className="bg-brand text-white px-[17px] py-[7px] rounded-md text-xs font-bold flex items-center gap-2 hover:scale-[1.02] transition-transform">
                 <Save size={14} /> 변경사항 저장
               </button>
             </div>
