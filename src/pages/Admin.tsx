@@ -300,22 +300,22 @@ export default function Admin() {
                 ] as const).map((section) => (
                   <div key={section.key} className="border-t border-neutral-100 pt-8">
                     <label className="text-[10px] font-bold text-neutral-400 uppercase mb-4 block tracking-wider">{section.label}</label>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="flex flex-col gap-4">
                       {Array.isArray(editingProject[section.key]) && (editingProject[section.key] as string[]).map((img, idx) => (
-                        <div key={idx} className="relative rounded-md overflow-hidden group border border-neutral-200 bg-neutral-50 h-32">
-                          <img src={img} className="w-full h-full object-contain" />
+                        <div key={idx} className="relative rounded-md overflow-hidden group border border-neutral-200 bg-neutral-50 shadow-sm transition-all">
+                          <img src={img} className="w-full h-auto object-contain" />
                           <button 
                             onClick={() => removeSectionImage(section.key, idx)}
-                            className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
                           >
                             <X size={10} />
                           </button>
                         </div>
                       ))}
                       {(Array.isArray(editingProject[section.key]) ? (editingProject[section.key] as string[]) : []).length < 2 && (
-                        <label className="cursor-pointer rounded-md border-2 border-dashed border-neutral-200 flex flex-col items-center justify-center text-neutral-400 hover:border-brand hover:text-brand transition-all p-4 h-32">
+                        <label className="cursor-pointer rounded-md border-2 border-dashed border-neutral-200 flex flex-col items-center justify-center text-neutral-400 hover:border-brand hover:text-brand transition-all p-8 h-32 bg-neutral-50/50">
                           <Plus size={20} />
-                          <span className="text-[10px] font-bold mt-2 text-center leading-tight">이미지 추가<br/>(최대 2장)</span>
+                          <span className="text-[10px] font-bold mt-2 text-center leading-tight uppercase tracking-wider">이미지 추가 (최대 2장)</span>
                           <input 
                             type="file" 
                             className="hidden" 

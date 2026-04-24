@@ -23,7 +23,7 @@ export default function ProjectDetail() {
   const SectionImages = ({ images }: { images: string[] }) => {
     if (!images || !Array.isArray(images) || images.length === 0) return null;
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+      <div className="flex flex-col gap-8 mt-6">
         {images.map((img, idx) => (
           <div key={idx} className="w-full rounded-md overflow-hidden border border-neutral-100 bg-white">
             <img src={img} alt="" className="w-full h-auto object-contain" />
