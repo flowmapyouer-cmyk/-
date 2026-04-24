@@ -1,6 +1,6 @@
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import { useMemo } from 'react';
 
@@ -55,6 +55,22 @@ export default function ProjectDetail() {
       <div className="w-full rounded-md overflow-hidden mb-20 bg-neutral-100">
         <img src={project.thumbnail} alt={project.title} className="w-full h-auto object-contain" />
       </div>
+
+      {project.externalLinks && project.externalLinks.filter(l => l.url && l.url.trim() !== '').length > 0 && (
+        <div className="flex flex-wrap gap-4 mb-20">
+          {project.externalLinks.filter(l => l.url && l.url.trim() !== '').map((link, idx) => (
+            <a
+              key={idx}
+              href={link.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 bg-black text-white px-6 py-3 rounded-md font-bold text-sm hover:scale-[1.02] active:scale-95 transition-all shadow-lg"
+            >
+              {link.name || 'Project Link'} <ExternalLink size={16} />
+            </a>
+          ))}
+        </div>
+      )}
 
       <article className="space-y-24 pb-32">
         <section>

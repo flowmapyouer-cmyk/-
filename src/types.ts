@@ -14,6 +14,7 @@ export interface Project {
   decisionExecution: string[]; // 03. Decision & Execution (Images)
   result: string[]; // 04. Result (Images)
   insight: string[]; // 05. Insight (Images)
+  externalLinks: { name: string; url: string }[]; // External project links
   published: boolean;
 }
 

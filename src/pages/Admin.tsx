@@ -63,6 +63,7 @@ export default function Admin() {
       decisionExecution: Array.isArray(p.decisionExecution) ? p.decisionExecution : [],
       result: Array.isArray(p.result) ? p.result : [],
       insight: Array.isArray(p.insight) ? p.insight : [],
+      externalLinks: Array.isArray(p.externalLinks) ? p.externalLinks : [],
     };
     setEditingProject(normalized);
   };
@@ -90,6 +91,7 @@ export default function Admin() {
       decisionExecution: [],
       result: [],
       insight: [],
+      externalLinks: [{ name: '', url: '' }, { name: '', url: '' }],
       published: true
     };
     setEditingProject(newProject);
@@ -244,6 +246,46 @@ export default function Admin() {
                     <Upload size={16} /> 썸네일 업로드
                     <input type="file" className="hidden" accept="image/*" onChange={(e) => handleFileUpload(e, true)} />
                   </label>
+                </div>
+              </div>
+
+              {/* External Links */}
+              <div className="space-y-4 pt-4 border-t border-neutral-100">
+                <label className="text-[10px] font-bold text-neutral-400 uppercase mb-2 block tracking-wider">External Links (e.g., Video, Prototype, Case Study)</label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {[0, 1].map((idx) => (
+                    <div key={idx} className="space-y-4 p-4 bg-neutral-50 rounded-md border border-neutral-100">
+                      <div className="flex justify-between items-center">
+                        <span className="text-[9px] font-bold text-neutral-400">LINK {idx + 1}</span>
+                      </div>
+                      <div className="space-y-3">
+                        <input
+                          type="text"
+                          placeholder="Link Name (예: 시연 비디오, Figma 프로토타입)"
+                          value={editingProject.externalLinks?.[idx]?.name || ''}
+                          onChange={(e) => {
+                            const newLinks = [...(editingProject.externalLinks || [{ name: '', url: '' }, { name: '', url: '' }])];
+                            if (!newLinks[idx]) newLinks[idx] = { name: '', url: '' };
+                            newLinks[idx].name = e.target.value;
+                            setEditingProject({...editingProject, externalLinks: newLinks});
+                          }}
+                          className="w-full px-3 py-2 border border-neutral-200 rounded-md focus:outline-none focus:ring-1 focus:ring-brand font-normal text-xs"
+                        />
+                        <input
+                          type="text"
+                          placeholder="Link URL (https://...)"
+                          value={editingProject.externalLinks?.[idx]?.url || ''}
+                          onChange={(e) => {
+                            const newLinks = [...(editingProject.externalLinks || [{ name: '', url: '' }, { name: '', url: '' }])];
+                            if (!newLinks[idx]) newLinks[idx] = { name: '', url: '' };
+                            newLinks[idx].url = e.target.value;
+                            setEditingProject({...editingProject, externalLinks: newLinks});
+                          }}
+                          className="w-full px-3 py-2 border border-neutral-200 rounded-md focus:outline-none focus:ring-1 focus:ring-brand font-normal text-xs"
+                        />
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
 

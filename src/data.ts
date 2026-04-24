@@ -12,6 +12,7 @@ export const INITIAL_PROJECTS: Project[] = [
     decisionExecution: [],
     result: [],
     insight: [],
+    externalLinks: [],
     published: true,
   },
   {
@@ -25,6 +26,7 @@ export const INITIAL_PROJECTS: Project[] = [
     decisionExecution: [],
     result: [],
     insight: [],
+    externalLinks: [],
     published: true,
   },
 ];
