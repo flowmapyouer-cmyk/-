@@ -43,9 +43,26 @@ export default function Home() {
             <a href="#work" className="bg-point text-black px-[29px] py-[13px] rounded-md font-bold hover:scale-105 transition-transform flex items-center gap-2 shadow-lg shadow-point/10">
               프로젝트 보기
             </a>
-            <a href="#contact" className="border-2 border-point text-point px-[29px] py-[13px] rounded-md font-bold hover:bg-point/10 transition-colors">
-              연락하기
-            </a>
+            <div className="relative inline-block">
+              <button 
+                onClick={copyEmail}
+                className="border-2 border-point text-point px-[29px] py-[13px] rounded-md font-bold hover:bg-point/10 transition-colors"
+              >
+                연락하기
+              </button>
+              <AnimatePresence>
+                {copied && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10, x: '-50%' }}
+                    animate={{ opacity: 1, y: -10, x: '-50%' }}
+                    exit={{ opacity: 0, y: 10, x: '-50%' }}
+                    className="absolute left-1/2 -top-12 bg-neutral-800 text-white text-xs py-2 px-4 rounded-md shadow-2xl whitespace-nowrap z-50 font-medium"
+                  >
+                    메일 주소가 복사되었습니다
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
         </motion.div>
       </section>
