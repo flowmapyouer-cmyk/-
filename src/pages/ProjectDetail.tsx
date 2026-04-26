@@ -88,7 +88,7 @@ export default function ProjectDetail() {
           <SectionImages images={project.decisionExecution} />
         </section>
 
-        <section className="p-10 bg-neutral-50 rounded-md text-black">
+        <section>
           <h2 className="text-xl font-bold uppercase tracking-tight text-black mb-6">04. Result</h2>
           <SectionImages images={project.result} />
         </section>
