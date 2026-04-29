@@ -25,22 +25,22 @@ export default function Home() {
   return (
     <main className="max-w-screen-xl mx-auto px-6 pb-24">
       {/* Hero Section */}
-      <section className="-mx-6 px-6 py-24 md:py-40 bg-black text-white">
+      <section className="-mx-6 px-6 py-28 md:py-40 bg-black text-white overflow-hidden flex flex-col justify-center min-h-[70vh]">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="max-w-4xl"
+          transition={{ duration: 0.8 }}
+          className="max-w-5xl mx-auto w-full"
         >
-          <span className="text-[10px] font-bold text-white uppercase tracking-widest mb-6 block">
+          <span className="text-[10px] md:text-xs font-bold text-white uppercase tracking-[0.2em] mb-10 block opacity-60">
             Product Manager
           </span>
-          <h1 className="text-4xl md:text-6xl font-display font-bold leading-[1.2] tracking-tight mb-8 text-white">
+          <h1 className="text-3xl md:text-5xl lg:text-7xl font-display font-bold leading-[1.25] tracking-tight mb-10 text-white">
             사용자도 인식하지 못한 불편을 찾아내고,<br />
             <span className="text-point">검증</span>으로 바꾸는 PM을 지향합니다.
           </h1>
-          <p className="text-sm md:text-base text-white/80 font-normal leading-relaxed mb-12 max-w-2xl">
-            '왜 이탈했는가'보다 "사용자가 무엇을 예측하지 못했는가"를 먼저 묻습니다. <br />
+          <p className="text-xs md:text-sm lg:text-base text-white/60 font-normal leading-relaxed mb-16 max-w-2xl">
+            '왜 이탈했는가'보다 "사용자가 무엇을 예측하지 못했는가"를 먼저 묻습니다.<br />
             표면적인 불만 뒤에 숨은 구조적 원인을 집요하게 파고들고,<br />
             그 결과가 비즈니스 임팩트로 이어지는 구조를 만드는 것에 의미를 둡니다.
           </p>
