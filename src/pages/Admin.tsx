@@ -6,13 +6,14 @@ import { useData } from '../context/DataContext';
 const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || '6913'; // 환경변수가 없을 경우 기본값으로 6913 사용
 
 export default function Admin() {
-  const { projects, logs, contact, updateProjects, updateLogs, updateContact, deleteProject, deleteLog } = useData();
+  const { projects, logs, contact, updateProjects, updateLogs, updateContact, deleteProject, deleteLog, upsertProject, upsertLog } = useData();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
-  const [activeTab, setActiveTab] = useState<'projects' | 'logs' | 'contact'>('projects');
+  const [activeTab, setActiveTab] = useState<'projects' | 'lap' | 'contact'>('projects');
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [editingLog, setEditingLog] = useState<WorkLog | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleLogin = (e: FormEvent) => {
     e.preventDefault();
@@ -31,30 +32,66 @@ export default function Admin() {
 
   const isAuthorized = isAuthenticated;
 
-  const handleFileUpload = (e: ChangeEvent<HTMLInputElement>, isThumbnail: boolean, section?: keyof Project) => {
+  const compressImage = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.src = URL.createObjectURL(file);
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        const maxDimension = 800; // Reduced from 1200 for better size management
+
+        if (width > height) {
+          if (width > maxDimension) {
+            height = Math.round((height * maxDimension) / width);
+            width = maxDimension;
+          }
+        } else {
+          if (height > maxDimension) {
+            width = Math.round((width * maxDimension) / height);
+            height = maxDimension;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, width, height);
+        
+        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.6); // Reduced from 0.7
+        resolve(compressedBase64);
+        URL.revokeObjectURL(img.src);
+      };
+      img.onerror = reject;
+    });
+  };
+
+  const handleFileUpload = async (e: ChangeEvent<HTMLInputElement>, isThumbnail: boolean, section?: keyof Project) => {
     const files = e.target.files;
     if (!files || !editingProject) return;
 
-    Array.from(files).forEach((file: File) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result as string;
-        if (isThumbnail) {
-          setEditingProject(prev => prev ? ({ ...prev, thumbnail: base64String }) : null);
-        } else if (section) {
-          setEditingProject(prev => {
-            if (!prev) return null;
-            const currentImages = Array.isArray(prev[section]) ? (prev[section] as string[]) : [];
-            if (currentImages.length >= 2) return prev;
-            return {
-              ...prev,
-              [section]: [...currentImages, base64String]
-            };
-          });
-        }
-      };
-      reader.readAsDataURL(file);
-    });
+    try {
+      const file = files[0];
+      const base64String = await compressImage(file);
+      
+      if (isThumbnail) {
+        setEditingProject(prev => prev ? ({ ...prev, thumbnail: base64String }) : null);
+      } else if (section) {
+        setEditingProject(prev => {
+          if (!prev) return null;
+          const currentImages = Array.isArray(prev[section]) ? (prev[section] as string[]) : [];
+          if (currentImages.length >= 2) return prev;
+          return {
+            ...prev,
+            [section]: [...currentImages, base64String]
+          };
+        });
+      }
+    } catch (err) {
+      console.error('Image compression failed:', err);
+      alert('이미지 최적화에 실패했습니다.');
+    }
   };
 
   const removeSectionImage = (section: keyof Project, index: number) => {
@@ -80,20 +117,54 @@ export default function Admin() {
   };
 
   const saveProject = async () => {
-    if (!editingProject) return;
+    if (!editingProject || isSaving) return;
+    
+    // Basic validation
+    if (!editingProject.title.trim()) {
+      alert('프로젝트 제목을 입력해주세요.');
+      return;
+    }
+
+    if (!editingProject.slug.trim()) {
+      alert('슬러그(Slug)를 입력해주세요.');
+      return;
+    }
+
+    setIsSaving(true);
+    
     try {
-      if (editingProject.id.startsWith('new-')) {
+      // Clean up external links and images
+      const projectToSave = {
+        ...editingProject,
+        externalLinks: (editingProject.externalLinks || []).filter(link => link.name.trim() || link.url.trim())
+      };
+
+      // Check total size to prevent Firestore 1MB limit error
+      const jsonSize = new TextEncoder().encode(JSON.stringify(projectToSave)).length;
+      if (jsonSize > 950000) { // ~950KB safety margin
+        alert('데이터 용량이 너무 큽니다 (1MB 초과). 이미지를 줄이거나 갯수를 줄여주세요.');
+        setIsSaving(false);
+        return;
+      }
+
+      if (projectToSave.id.startsWith('new-')) {
         const newId = Math.random().toString(36).substr(2, 9);
-        const newProject = { ...editingProject, id: newId };
-        await updateProjects([newProject, ...projects]);
+        const newProject = { ...projectToSave, id: newId, order: projects.length };
+        await upsertProject(newProject);
       } else {
-        await updateProjects(projects.map(p => p.id === editingProject.id ? editingProject : p));
+        await upsertProject(projectToSave);
       }
       setEditingProject(null);
       alert('프로젝트가 성공적으로 저장되었습니다!');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Save project error:', error);
-      alert('프로젝트 저장에 실패했습니다.');
+      if (error.message?.includes('too large') || error.message?.includes('1048576')) {
+        alert('데이터 용량이 Firestore 제한(1MB)을 초과했습니다. 이미지를 더 작게 압축하거나 개수를 줄여보세요.');
+      } else {
+        alert('프로젝트 저장에 실패했습니다: ' + (error.message || '알 수 없는 오류'));
+      }
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -116,59 +187,95 @@ export default function Admin() {
   };
 
   const deleteProjectHandler = async (id: string) => {
-    if (window.confirm('프로젝트를 삭제하시겠습니까?')) {
-      try {
-        await deleteProject(id);
-      } catch (error) {
-        alert('삭제에 실패했습니다.');
+    // window.confirm may be blocked in some iframe environments
+    try {
+      await deleteProject(id);
+      // If it was a mock project (id '1' or '2') and Firestore is empty, 
+      // we might need to update the rest of the projects to Firestore to "break" the fallback
+      if ((id === '1' || id === '2') && projects.length > 0) {
+        const remaining = projects.filter(p => p.id !== id);
+        if (remaining.length > 0) {
+          await updateProjects(remaining);
+        }
       }
+    } catch (error) {
+      console.error('Delete project error:', error);
+      alert('삭제에 실패했습니다.');
     }
   };
 
-  const handleLogFileUpload = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleLogFileUpload = async (e: ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || !editingLog) return;
     
-    Array.from(files).forEach((file: File) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result as string;
-        // Inject image markdown into content
-        const imageTag = `\n\n![Image](${base64String})\n\n`;
-        setEditingLog(prev => prev ? ({
-          ...prev,
-          content: prev.content + imageTag
-        }) : null);
-      };
-      reader.readAsDataURL(file);
-    });
+    try {
+      const file = files[0];
+      const base64String = await compressImage(file);
+      // Inject image markdown into content
+      const imageTag = `\n\n![Image](${base64String})\n\n`;
+      setEditingLog(prev => prev ? ({
+        ...prev,
+        content: prev.content + imageTag
+      }) : null);
+    } catch (err) {
+      console.error('Log image compression failed:', err);
+      alert('이미지 최적화에 실패했습니다.');
+    }
   };
 
   const saveLog = async () => {
-    if (!editingLog) return;
+    if (!editingLog || isSaving) return;
+    
+    if (!editingLog.title.trim()) {
+      alert('제목을 입력해주세요.');
+      return;
+    }
+
+    setIsSaving(true);
+
+    // Check total size to prevent Firestore 1MB limit error
+    const jsonSize = new TextEncoder().encode(JSON.stringify(editingLog)).length;
+    if (jsonSize > 950000) {
+      alert('기록 용량이 너무 큽니다 (1MB 초과). 이미지를 줄이거나 갯수를 줄여주세요.');
+      setIsSaving(false);
+      return;
+    }
+
     try {
       if (editingLog.id.startsWith('new-')) {
         const newId = Math.random().toString(36).substr(2, 9);
         const newLog = { ...editingLog, id: newId };
-        await updateLogs([newLog, ...logs]);
+        await upsertLog(newLog);
       } else {
-        await updateLogs(logs.map(l => l.id === editingLog.id ? editingLog : l));
+        await upsertLog(editingLog);
       }
       setEditingLog(null);
       alert('기록이 성공적으로 저장되었습니다!');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Save log error:', error);
-      alert('기록 저장에 실패했습니다.');
+      if (error.message?.includes('too large') || error.message?.includes('1048576')) {
+        alert('데이터 용량이 Firestore 제한(1MB)을 초과했습니다. 이미지를 더 작게 압축하거나 개수를 줄여보세요.');
+      } else {
+        alert('기록 저장에 실패했습니다: ' + (error.message || '알 수 없는 오류'));
+      }
+    } finally {
+      setIsSaving(false);
     }
   };
 
   const deleteLogHandler = async (id: string) => {
-    if (window.confirm('정말 삭제하시겠습니까?')) {
-      try {
-        await deleteLog(id);
-      } catch (error) {
-        alert('삭제에 실패했습니다.');
+    try {
+      await deleteLog(id);
+      // Fallback handling for logs
+      if ((id === '1' || id === '2') && logs.length > 0) {
+        const remaining = logs.filter(l => l.id !== id);
+        if (remaining.length > 0) {
+          await updateLogs(remaining);
+        }
       }
+    } catch (error) {
+      console.error('Delete log error:', error);
+      alert('삭제에 실패했습니다.');
     }
   };
 
@@ -394,9 +501,10 @@ export default function Admin() {
                 </button>
                 <button 
                   onClick={saveProject}
-                  className="px-10 py-3 rounded-md font-bold bg-brand text-white hover:scale-[1.02] transition-transform shadow-lg shadow-brand/20"
+                  disabled={isSaving}
+                  className="px-10 py-3 rounded-md font-bold bg-brand text-white hover:scale-[1.02] transition-transform shadow-lg shadow-brand/20 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  저장하기
+                  {isSaving ? '저장 중...' : '저장하기'}
                 </button>
               </div>
             </div>
@@ -519,9 +627,10 @@ export default function Admin() {
                 </button>
                 <button 
                   onClick={saveLog}
-                  className="px-10 py-3 rounded-md font-bold bg-brand text-white hover:scale-[1.02] transition-transform shadow-lg shadow-brand/20"
+                  disabled={isSaving}
+                  className="px-10 py-3 rounded-md font-bold bg-brand text-white hover:scale-[1.02] transition-transform shadow-lg shadow-brand/20 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  저장하기
+                  {isSaving ? '저장 중...' : '저장하기'}
                 </button>
               </div>
             </div>
@@ -535,7 +644,7 @@ export default function Admin() {
           <p className="text-xs text-neutral-500 font-normal">개인 브랜드 제품 관리자 패널</p>
         </div>
         <div className="flex gap-2">
-          {['projects', 'logs', 'contact'].map((tab) => (
+          {['projects', 'lap', 'contact'].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab as any)}
@@ -543,7 +652,7 @@ export default function Admin() {
                 activeTab === tab ? 'bg-brand text-white' : 'bg-neutral-100 hover:bg-neutral-200'
               }`}
             >
-              {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              {tab === 'lap' ? 'Lap' : tab.charAt(0).toUpperCase() + tab.slice(1)}
             </button>
           ))}
         </div>
@@ -597,7 +706,7 @@ export default function Admin() {
           </div>
         )}
 
-        {activeTab === 'logs' && (
+        {activeTab === 'lap' && (
           <div className="p-8">
             <div className="flex justify-between items-center mb-8">
               <h2 className="text-lg font-bold">Work Labs</h2>

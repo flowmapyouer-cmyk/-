@@ -47,6 +47,8 @@ interface DataContextType {
   updateContact: (contact: ContactInfo) => Promise<void>;
   deleteProject: (id: string) => Promise<void>;
   deleteLog: (id: string) => Promise<void>;
+  upsertProject: (project: Project) => Promise<void>;
+  upsertLog: (log: WorkLog) => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -62,7 +64,15 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const q = query(collection(db, 'projects'), orderBy('order', 'asc'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const projectsData = snapshot.docs.map(doc => doc.data() as Project);
-      setProjects(projectsData.length > 0 ? projectsData : INITIAL_PROJECTS);
+      if (projectsData.length > 0) {
+        setProjects(projectsData);
+      } else if (!snapshot.metadata.fromCache) {
+        // If we are online and it's truly empty, 
+        // we keep the local state (Initial Projects) until they add something,
+        // unless they've manually added/deleted things before.
+        // Actually, to make delete "active", we should allow it to be empty.
+        setProjects([]);
+      }
       setLoading(false);
     }, (error) => {
       handleFirestoreError(error, OperationType.GET, 'projects');
@@ -76,7 +86,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const q = query(collection(db, 'logs'), orderBy('date', 'desc'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const logsData = snapshot.docs.map(doc => doc.data() as WorkLog);
-      setLogs(logsData.length > 0 ? logsData : INITIAL_LOGS);
+      if (logsData.length > 0) {
+        setLogs(logsData);
+      } else if (!snapshot.metadata.fromCache) {
+        setLogs([]);
+      }
     }, (error) => {
       handleFirestoreError(error, OperationType.GET, 'logs');
     });
@@ -108,6 +122,15 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const upsertProject = async (project: Project) => {
+    try {
+      const docRef = doc(db, 'projects', project.id);
+      await setDoc(docRef, project);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, `projects/${project.id}`);
+    }
+  };
+
   const deleteProject = async (id: string) => {
     try {
       await deleteDoc(doc(db, 'projects', id));
@@ -126,6 +149,15 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, 'logs');
+    }
+  };
+
+  const upsertLog = async (log: WorkLog) => {
+    try {
+      const docRef = doc(db, 'logs', log.id);
+      await setDoc(docRef, log);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, `logs/${log.id}`);
     }
   };
 
@@ -154,7 +186,9 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       updateLogs, 
       updateContact,
       deleteProject,
-      deleteLog
+      deleteLog,
+      upsertProject,
+      upsertLog
     }}>
       {children}
     </DataContext.Provider>

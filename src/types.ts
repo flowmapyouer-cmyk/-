@@ -16,6 +16,7 @@ export interface Project {
   insight: string[]; // 05. Insight (Images)
   externalLinks: { name: string; url: string }[]; // External project links
   published: boolean;
+  order?: number;
 }
 
 export interface WorkLog {
