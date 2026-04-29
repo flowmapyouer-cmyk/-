@@ -35,11 +35,11 @@ export default function Home() {
           <span className="text-[10px] md:text-xs font-bold text-white uppercase tracking-[0.2em] mb-10 block opacity-60">
             Product Manager
           </span>
-          <h1 className="text-[20px] md:text-[22px] font-display font-bold leading-[1.3] tracking-tight mb-10 text-white">
+          <h1 className="text-[28px] md:text-[36px] font-display font-bold leading-[1.3] tracking-tight mb-10 text-white">
             사용자도 인식하지 못한 불편을 찾아내고,<br />
             <span className="text-point">검증</span>으로 바꾸는 PM을 지향합니다.
           </h1>
-          <p className="text-xs md:text-sm lg:text-base text-white/60 font-normal leading-relaxed mb-16 max-w-2xl">
+          <p className="text-sm md:text-[18px] text-white/60 font-normal leading-relaxed mb-16 max-w-2xl">
             '왜 이탈했는가'보다 "사용자가 무엇을 예측하지 못했는가"를 먼저 묻습니다.<br />
             표면적인 불만 뒤에 숨은 구조적 원인을 집요하게 파고들고,<br />
             그 결과가 비즈니스 임팩트로 이어지는 구조를 만드는 것에 의미를 둡니다.
