@@ -1,43 +1,35 @@
-import { useState, FormEvent, ChangeEvent, useEffect } from 'react';
+import { useState, FormEvent, ChangeEvent } from 'react';
 import { Project, WorkLog, ContactInfo } from '../types';
 import { Plus, Trash2, Edit3, Save, X, Eye, EyeOff, Upload, Image as ImageIcon, Pin, PinOff, LogIn } from 'lucide-react';
 import { useData } from '../context/DataContext';
-import { auth } from '../firebase';
-import { signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, User } from 'firebase/auth';
 
-const ADMIN_EMAIL = 'verus6930@gmail.com'; // From user metadata
+const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || '6913'; // 환경변수가 없을 경우 기본값으로 6913 사용
 
 export default function Admin() {
   const { projects, logs, contact, updateProjects, updateLogs, updateContact } = useData();
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [password, setPassword] = useState('');
+  const [loginError, setLoginError] = useState('');
   const [activeTab, setActiveTab] = useState<'projects' | 'logs' | 'contact'>('projects');
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [editingLog, setEditingLog] = useState<WorkLog | null>(null);
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      setLoading(false);
-    });
-    return () => unsubscribe();
-  }, []);
-
-  const handleGoogleLogin = async () => {
-    try {
-      const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
-    } catch (error) {
-      console.error('Login failed:', error);
-      alert('Login failed. Please try again.');
+  const handleLogin = (e: FormEvent) => {
+    e.preventDefault();
+    if (password === ADMIN_PASSWORD) {
+      setIsAuthenticated(true);
+      setLoginError('');
+    } else {
+      setLoginError('비밀번호가 올바르지 않습니다');
     }
   };
 
-  const handleLogout = async () => {
-    await signOut(auth);
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    setPassword('');
   };
 
-  const isAuthorized = user && user.email === ADMIN_EMAIL;
+  const isAuthorized = isAuthenticated;
 
   const handleFileUpload = (e: ChangeEvent<HTMLInputElement>, isThumbnail: boolean, section?: keyof Project) => {
     const files = e.target.files;
@@ -184,14 +176,6 @@ export default function Admin() {
     updateLogs(logs.map(l => l.id === id ? { ...l, pinned: !l.pinned } : l));
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-[80vh] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand"></div>
-      </div>
-    );
-  }
-
   if (!isAuthorized) {
     return (
       <div className="min-h-[80vh] flex items-center justify-center bg-neutral-50 px-6">
@@ -199,27 +183,28 @@ export default function Admin() {
           <h1 className="text-xl font-bold mb-2 uppercase tracking-tight">Admin Access</h1>
           <p className="text-xs text-neutral-400 mb-8">Authorized personnel only</p>
           
-          {user ? (
-            <div className="space-y-4">
-              <p className="text-xs text-red-500 bg-red-50 py-3 px-4 rounded-md border border-red-100">
-                Logged in as <b>{user.email}</b><br/>
-                This account is not authorized.
-              </p>
-              <button 
-                onClick={handleLogout}
-                className="w-full border border-neutral-200 text-neutral-600 py-3 rounded-md text-xs font-bold hover:bg-neutral-50 transition-colors"
-              >
-                LOGOUT
-              </button>
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div className="text-left">
+              <label className="text-[10px] font-bold text-neutral-400 uppercase mb-2 block tracking-wider">Password</label>
+              <input 
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                className="w-full px-4 py-3 border border-neutral-200 rounded-md focus:outline-none focus:ring-1 focus:ring-black text-sm"
+                autoFocus
+              />
+              {loginError && (
+                <p className="text-[10px] text-red-500 mt-2 font-bold">{loginError}</p>
+              )}
             </div>
-          ) : (
             <button 
-              onClick={handleGoogleLogin}
+              type="submit"
               className="w-full bg-black text-white py-3 rounded-md font-bold flex items-center justify-center gap-2 hover:scale-[1.02] transition-transform shadow-lg"
             >
-              <LogIn size={16} /> SIGN IN WITH GOOGLE
+              <LogIn size={16} /> LOGIN
             </button>
-          )}
+          </form>
         </div>
       </div>
     );
@@ -232,7 +217,7 @@ export default function Admin() {
           onClick={handleLogout}
           className="text-[10px] font-bold text-neutral-400 hover:text-red-500 uppercase tracking-widest flex items-center gap-1 transition-colors"
         >
-          Logout ({user?.email})
+          Logout
         </button>
       </div>
       {/* Edit Modal */}
