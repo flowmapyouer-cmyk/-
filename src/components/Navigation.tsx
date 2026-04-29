@@ -10,7 +10,7 @@ export default function Navigation() {
         </Link>
         <div className="flex gap-8 items-center text-sm font-bold tracking-tight">
           <Link to="/work" className="hover:text-brand transition-colors">프로젝트</Link>
-          <Link to="/logs" className="hover:text-brand transition-colors">로그</Link>
+          <Link to="/logs" className="hover:text-brand transition-colors">실험실</Link>
         </div>
       </div>
     </nav>

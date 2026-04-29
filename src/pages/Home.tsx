@@ -35,10 +35,15 @@ export default function Home() {
           <span className="text-[10px] font-bold text-white uppercase tracking-widest mb-6 block">
             Product Manager
           </span>
-          <h1 className="text-4xl md:text-7xl font-display font-bold leading-[0.95] tracking-tight mb-12 text-white">
-            사용자의 <span className="text-point">맥락</span>을 읽고,<br />
-            실행 가능한 구조로 바꿉니다.
+          <h1 className="text-4xl md:text-6xl font-display font-bold leading-[1.2] tracking-tight mb-8 text-white">
+            사용자도 인식하지 못한 불편을 찾아내고,<br />
+            <span className="text-point">검증</span>으로 바꾸는 PM을 지향합니다.
           </h1>
+          <p className="text-sm md:text-base text-white/80 font-normal leading-relaxed mb-12 max-w-2xl">
+            '왜 이탈했는가'보다 "사용자가 무엇을 예측하지 못했는가"를 먼저 묻습니다. <br />
+            표면적인 불만 뒤에 숨은 구조적 원인을 집요하게 파고들고,<br />
+            그 결과가 비즈니스 임팩트로 이어지는 구조를 만드는 것에 의미를 둡니다.
+          </p>
           <div className="flex gap-6">
             <a href="#work" className="bg-point text-black px-[29px] py-[13px] rounded-md font-bold hover:scale-105 transition-transform flex items-center gap-2 shadow-lg shadow-point/10">
               프로젝트 보기
@@ -95,9 +100,9 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Work Log */}
+      {/* Work Lab */}
       <section className="py-20 border-t border-neutral-100">
-        <h2 className="text-xl font-bold uppercase tracking-tight text-black mb-12">Work Log</h2>
+        <h2 className="text-xl font-bold uppercase tracking-tight text-black mb-12">Work Lab</h2>
         <div className="space-y-0">
           {displayLogs.map((log) => (
             <Link
@@ -124,7 +129,7 @@ export default function Home() {
           ))}
           <div className="mt-12 text-center">
             <Link to="/logs" className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-neutral-400 hover:text-black transition-colors">
-              View All Logs <ArrowRight size={12} />
+              View All Labs <ArrowRight size={12} />
             </Link>
           </div>
         </div>

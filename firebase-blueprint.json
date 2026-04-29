@@ -1,0 +1,75 @@
+{
+  "entities": {
+    "Project": {
+      "title": "Project",
+      "description": "Portfolio project data",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "type": { "type": "string" },
+        "period": { "type": "string" },
+        "contribution": { "type": "string" },
+        "thumbnail": { "type": "string" },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "problem": { "type": "array", "items": { "type": "string" } },
+        "hypothesis": { "type": "array", "items": { "type": "string" } },
+        "decisionExecution": { "type": "array", "items": { "type": "string" } },
+        "result": { "type": "array", "items": { "type": "string" } },
+        "insight": { "type": "array", "items": { "type": "string" } },
+        "externalLinks": { 
+          "type": "array", 
+          "items": { 
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "url": { "type": "string" }
+            }
+          }
+        },
+        "published": { "type": "boolean" },
+        "order": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "title", "published"]
+    },
+    "WorkLog": {
+      "title": "WorkLog",
+      "description": "Daily work log entry",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "date": { "type": "string" },
+        "content": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "date", "content"]
+    },
+    "ContactInfo": {
+      "title": "ContactInfo",
+      "description": "Personal contact information",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" },
+        "github": { "type": "string" },
+        "linkedin": { "type": "string" },
+        "instagram": { "type": "string" }
+      }
+    }
+  },
+  "firestore": {
+    "projects": {
+      "schema": "Project",
+      "description": "Collection of portfolio projects"
+    },
+    "logs": {
+      "schema": "WorkLog",
+      "description": "Collection of work logs"
+    },
+    "settings/contact": {
+      "schema": "ContactInfo",
+      "description": "Single document for contact information"
+    }
+  }
+}

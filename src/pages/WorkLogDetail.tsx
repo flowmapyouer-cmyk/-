@@ -25,7 +25,7 @@ export default function WorkLogDetail() {
   const nextLog = currentIndex > 0 ? sortedLogs[currentIndex - 1] : null;
   const prevLog = currentIndex < sortedLogs.length - 1 ? sortedLogs[currentIndex + 1] : null;
 
-  if (!log) return <div className="min-h-screen flex items-center justify-center font-bold">로그를 찾을 수 없습니다.</div>;
+  if (!log) return <div className="min-h-screen flex items-center justify-center font-bold">실험실 글을 찾을 수 없습니다.</div>;
 
   return (
     <motion.div

@@ -1,24 +1,43 @@
-import { useState, FormEvent, ChangeEvent } from 'react';
+import { useState, FormEvent, ChangeEvent, useEffect } from 'react';
 import { Project, WorkLog, ContactInfo } from '../types';
-import { Plus, Trash2, Edit3, Save, X, Eye, EyeOff, Upload, Image as ImageIcon, Pin, PinOff } from 'lucide-react';
+import { Plus, Trash2, Edit3, Save, X, Eye, EyeOff, Upload, Image as ImageIcon, Pin, PinOff, LogIn } from 'lucide-react';
 import { useData } from '../context/DataContext';
+import { auth } from '../firebase';
+import { signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, User } from 'firebase/auth';
+
+const ADMIN_EMAIL = 'verus6930@gmail.com'; // From user metadata
 
 export default function Admin() {
   const { projects, logs, contact, updateProjects, updateLogs, updateContact } = useData();
-  const [password, setPassword] = useState('');
-  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'projects' | 'logs' | 'contact'>('projects');
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [editingLog, setEditingLog] = useState<WorkLog | null>(null);
 
-  const handleLogin = (e: FormEvent) => {
-    e.preventDefault();
-    if (password === '6913') {
-      setIsAuthorized(true);
-    } else {
-      alert('Incorrect password');
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const handleGoogleLogin = async () => {
+    try {
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+    } catch (error) {
+      console.error('Login failed:', error);
+      alert('Login failed. Please try again.');
     }
   };
+
+  const handleLogout = async () => {
+    await signOut(auth);
+  };
+
+  const isAuthorized = user && user.email === ADMIN_EMAIL;
 
   const handleFileUpload = (e: ChangeEvent<HTMLInputElement>, isThumbnail: boolean, section?: keyof Project) => {
     const files = e.target.files;
@@ -165,28 +184,57 @@ export default function Admin() {
     updateLogs(logs.map(l => l.id === id ? { ...l, pinned: !l.pinned } : l));
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-[80vh] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand"></div>
+      </div>
+    );
+  }
+
   if (!isAuthorized) {
     return (
       <div className="min-h-[80vh] flex items-center justify-center bg-neutral-50 px-6">
-        <form onSubmit={handleLogin} className="bg-white p-8 rounded-md border border-neutral-200 shadow-sm w-full max-w-sm">
-          <h1 className="text-xl font-bold mb-6 text-center uppercase tracking-tight">Admin Access</h1>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Enter password"
-            className="w-full px-4 py-3 border border-neutral-200 rounded-md mb-4 focus:outline-none focus:ring-1 focus:ring-brand font-normal"
-          />
-          <button type="submit" className="w-full bg-brand text-white py-[9px] rounded-md font-bold hover:scale-[1.02] transition-transform">
-            LOGIN
-          </button>
-        </form>
+        <div className="bg-white p-10 rounded-md border border-neutral-200 shadow-sm w-full max-w-sm text-center">
+          <h1 className="text-xl font-bold mb-2 uppercase tracking-tight">Admin Access</h1>
+          <p className="text-xs text-neutral-400 mb-8">Authorized personnel only</p>
+          
+          {user ? (
+            <div className="space-y-4">
+              <p className="text-xs text-red-500 bg-red-50 py-3 px-4 rounded-md border border-red-100">
+                Logged in as <b>{user.email}</b><br/>
+                This account is not authorized.
+              </p>
+              <button 
+                onClick={handleLogout}
+                className="w-full border border-neutral-200 text-neutral-600 py-3 rounded-md text-xs font-bold hover:bg-neutral-50 transition-colors"
+              >
+                LOGOUT
+              </button>
+            </div>
+          ) : (
+            <button 
+              onClick={handleGoogleLogin}
+              className="w-full bg-black text-white py-3 rounded-md font-bold flex items-center justify-center gap-2 hover:scale-[1.02] transition-transform shadow-lg"
+            >
+              <LogIn size={16} /> SIGN IN WITH GOOGLE
+            </button>
+          )}
+        </div>
       </div>
     );
   }
 
   return (
     <div className="max-w-screen-lg mx-auto px-6 py-12">
+      <div className="flex justify-end mb-4">
+        <button 
+          onClick={handleLogout}
+          className="text-[10px] font-bold text-neutral-400 hover:text-red-500 uppercase tracking-widest flex items-center gap-1 transition-colors"
+        >
+          Logout ({user?.email})
+        </button>
+      </div>
       {/* Edit Modal */}
       {editingProject && (
         <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-6">
@@ -354,7 +402,7 @@ export default function Admin() {
         <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-6">
           <div className="bg-white rounded-md w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl">
             <div className="sticky top-0 bg-white/80 backdrop-blur-md px-8 py-6 border-b border-neutral-100 flex justify-between items-center z-10">
-              <h2 className="text-xl font-bold uppercase tracking-tight">Edit Work Log</h2>
+              <h2 className="text-xl font-bold uppercase tracking-tight">Edit Work Lab</h2>
               <button onClick={() => setEditingLog(null)} className="p-2 hover:bg-neutral-100 rounded-full transition-colors">
                 <X size={20} />
               </button>
@@ -420,7 +468,7 @@ export default function Admin() {
                       setEditingLog({...editingLog, pinned: e.target.checked});
                     }}
                   />
-                  <span className="text-sm font-bold text-neutral-700">이 로그를 상단에 고정하기 (최대 3개)</span>
+                  <span className="text-sm font-bold text-neutral-700">이 글을 상단에 고정하기 (최대 3개)</span>
                 </label>
               </div>
 
@@ -545,12 +593,12 @@ export default function Admin() {
         {activeTab === 'logs' && (
           <div className="p-8">
             <div className="flex justify-between items-center mb-8">
-              <h2 className="text-lg font-bold">Work Logs</h2>
+              <h2 className="text-lg font-bold">Work Labs</h2>
               <button 
                 onClick={createNewLog}
                 className="flex items-center gap-2 bg-brand text-white px-[10px] py-[4px] rounded-md text-xs font-bold hover:scale-105 transition-transform"
               >
-                <Plus size={14} /> 새 로그 작성
+                <Plus size={14} /> 새 실험실 글 작성
               </button>
             </div>
             <div className="space-y-4">

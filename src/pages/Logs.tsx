@@ -30,7 +30,7 @@ export default function Logs() {
     <main className="max-w-screen-xl mx-auto px-6 py-24">
       <header className="mb-20">
         <h1 className="text-4xl md:text-6xl font-display font-bold leading-tight tracking-tight uppercase">
-          Work<br />Logs
+          Work<br />Labs
         </h1>
         <p className="text-neutral-500 mt-6 max-w-xl font-normal leading-relaxed text-sm">
           제품을 만들며 배우고 느낀 점들을 기록합니다.
