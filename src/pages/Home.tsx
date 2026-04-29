@@ -6,7 +6,15 @@ import { useData } from '../context/DataContext';
 
 export default function Home() {
   const [copied, setCopied] = useState(false);
-  const { projects, logs, contact } = useData();
+  const { projects, logs, contact, loading } = useData();
+
+  if (loading) {
+    return (
+      <div className="min-h-[80vh] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand"></div>
+      </div>
+    );
+  }
 
   const copyEmail = () => {
     navigator.clipboard.writeText(contact.email);

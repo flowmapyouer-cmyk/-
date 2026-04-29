@@ -40,17 +40,17 @@ export default function Admin() {
         const canvas = document.createElement('canvas');
         let width = img.width;
         let height = img.height;
-        const maxDimension = 800; // Reduced from 1200 for better size management
+        const maskDimension = 600; // 더 공격적인 압축 (기존 800)
 
         if (width > height) {
-          if (width > maxDimension) {
-            height = Math.round((height * maxDimension) / width);
-            width = maxDimension;
+          if (width > maskDimension) {
+            height = Math.round((height * maskDimension) / width);
+            width = maskDimension;
           }
         } else {
-          if (height > maxDimension) {
-            width = Math.round((width * maxDimension) / height);
-            height = maxDimension;
+          if (height > maskDimension) {
+            width = Math.round((width * maskDimension) / height);
+            height = maskDimension;
           }
         }
 
@@ -59,7 +59,7 @@ export default function Admin() {
         const ctx = canvas.getContext('2d');
         ctx?.drawImage(img, 0, 0, width, height);
         
-        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.6); // Reduced from 0.7
+        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.5); // 압축률 상향 (0.6 -> 0.5)
         resolve(compressedBase64);
         URL.revokeObjectURL(img.src);
       };

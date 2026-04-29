@@ -42,6 +42,7 @@ interface DataContextType {
   projects: Project[];
   logs: WorkLog[];
   contact: ContactInfo;
+  loading: boolean;
   updateProjects: (projects: Project[]) => Promise<void>;
   updateLogs: (logs: WorkLog[]) => Promise<void>;
   updateContact: (contact: ContactInfo) => Promise<void>;
@@ -63,19 +64,13 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const q = query(collection(db, 'projects'), orderBy('order', 'asc'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const projectsData = snapshot.docs.map(doc => doc.data() as Project);
-      if (projectsData.length > 0) {
+      if (!snapshot.empty) {
+        const projectsData = snapshot.docs.map(doc => doc.data() as Project);
         setProjects(projectsData);
-      } else if (!snapshot.metadata.fromCache) {
-        // If we are online and it's truly empty, 
-        // we keep the local state (Initial Projects) until they add something,
-        // unless they've manually added/deleted things before.
-        // Actually, to make delete "active", we should allow it to be empty.
-        setProjects([]);
       }
-      setLoading(false);
+      setLoading(false); // Always stop loading on first response
     }, (error) => {
-      handleFirestoreError(error, OperationType.GET, 'projects');
+      console.error("Projects sync error:", error);
       setLoading(false);
     });
     return () => unsubscribe();
@@ -85,14 +80,12 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const q = query(collection(db, 'logs'), orderBy('date', 'desc'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const logsData = snapshot.docs.map(doc => doc.data() as WorkLog);
-      if (logsData.length > 0) {
+      if (!snapshot.empty) {
+        const logsData = snapshot.docs.map(doc => doc.data() as WorkLog);
         setLogs(logsData);
-      } else if (!snapshot.metadata.fromCache) {
-        setLogs([]);
       }
     }, (error) => {
-      handleFirestoreError(error, OperationType.GET, 'logs');
+      console.error("Logs sync error:", error);
     });
     return () => unsubscribe();
   }, []);
@@ -182,6 +175,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       projects, 
       logs, 
       contact, 
+      loading,
       updateProjects, 
       updateLogs, 
       updateContact,
