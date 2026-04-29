@@ -7,10 +7,36 @@ import {
   onSnapshot, 
   doc, 
   setDoc, 
+  deleteDoc,
   query, 
   orderBy,
   runTransaction
 } from 'firebase/firestore';
+
+enum OperationType {
+  CREATE = 'create',
+  UPDATE = 'update',
+  DELETE = 'delete',
+  LIST = 'list',
+  GET = 'get',
+  WRITE = 'write',
+}
+
+interface FirestoreErrorInfo {
+  error: string;
+  operationType: OperationType;
+  path: string | null;
+}
+
+function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+  const errInfo: FirestoreErrorInfo = {
+    error: error instanceof Error ? error.message : String(error),
+    operationType,
+    path
+  };
+  console.error('Firestore Error: ', JSON.stringify(errInfo));
+  throw new Error(JSON.stringify(errInfo));
+}
 
 interface DataContextType {
   projects: Project[];
@@ -19,6 +45,8 @@ interface DataContextType {
   updateProjects: (projects: Project[]) => Promise<void>;
   updateLogs: (logs: WorkLog[]) => Promise<void>;
   updateContact: (contact: ContactInfo) => Promise<void>;
+  deleteProject: (id: string) => Promise<void>;
+  deleteLog: (id: string) => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -34,15 +62,10 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const q = query(collection(db, 'projects'), orderBy('order', 'asc'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const projectsData = snapshot.docs.map(doc => doc.data() as Project);
-      if (projectsData.length > 0) {
-        setProjects(projectsData);
-      } else if (loading) {
-        // Seed if empty and admin (optional, already handled partially)
-        // But we already have the fallback from INITIAL_PROJECTS
-      }
+      setProjects(projectsData.length > 0 ? projectsData : INITIAL_PROJECTS);
       setLoading(false);
     }, (error) => {
-      console.error("Firestore sync error:", error);
+      handleFirestoreError(error, OperationType.GET, 'projects');
       setLoading(false);
     });
     return () => unsubscribe();
@@ -53,11 +76,9 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const q = query(collection(db, 'logs'), orderBy('date', 'desc'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const logsData = snapshot.docs.map(doc => doc.data() as WorkLog);
-      if (logsData.length > 0) {
-        setLogs(logsData);
-      }
+      setLogs(logsData.length > 0 ? logsData : INITIAL_LOGS);
     }, (error) => {
-      console.error("Logs sync error:", error);
+      handleFirestoreError(error, OperationType.GET, 'logs');
     });
     return () => unsubscribe();
   }, []);
@@ -69,30 +90,59 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setContact(snapshot.data() as ContactInfo);
       }
     }, (error) => {
-      console.error("Contact sync error:", error);
+      handleFirestoreError(error, OperationType.GET, 'settings/contact');
     });
     return () => unsubscribe();
   }, []);
+
   const updateProjects = async (newProjects: Project[]) => {
-    await runTransaction(db, async (transaction) => {
-      newProjects.forEach((p, idx) => {
-        const docRef = doc(db, 'projects', p.id);
-        transaction.set(docRef, { ...p, order: idx });
+    try {
+      await runTransaction(db, async (transaction) => {
+        newProjects.forEach((p, idx) => {
+          const docRef = doc(db, 'projects', p.id);
+          transaction.set(docRef, { ...p, order: idx });
+        });
       });
-    });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, 'projects');
+    }
+  };
+
+  const deleteProject = async (id: string) => {
+    try {
+      await deleteDoc(doc(db, 'projects', id));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, `projects/${id}`);
+    }
   };
 
   const updateLogs = async (newLogs: WorkLog[]) => {
-    await runTransaction(db, async (transaction) => {
-      newLogs.forEach(l => {
-        const docRef = doc(db, 'logs', l.id);
-        transaction.set(docRef, l);
+    try {
+      await runTransaction(db, async (transaction) => {
+        newLogs.forEach(l => {
+          const docRef = doc(db, 'logs', l.id);
+          transaction.set(docRef, l);
+        });
       });
-    });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, 'logs');
+    }
+  };
+
+  const deleteLog = async (id: string) => {
+    try {
+      await deleteDoc(doc(db, 'logs', id));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, `logs/${id}`);
+    }
   };
 
   const updateContact = async (newContact: ContactInfo) => {
-    await setDoc(doc(db, 'settings', 'contact'), newContact);
+    try {
+      await setDoc(doc(db, 'settings', 'contact'), newContact);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, 'settings/contact');
+    }
   };
 
   return (
@@ -102,7 +152,9 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       contact, 
       updateProjects, 
       updateLogs, 
-      updateContact 
+      updateContact,
+      deleteProject,
+      deleteLog
     }}>
       {children}
     </DataContext.Provider>

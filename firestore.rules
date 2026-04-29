@@ -9,19 +9,19 @@ service cloud.firestore {
     // Projects: Anyone can read, only admin can write
     match /projects/{projectId} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if true; // Warning: No authentication as requested. Anyone can write.
     }
 
     // Logs: Anyone can read, only admin can write
     match /logs/{logId} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if true; // Warning: No authentication as requested. Anyone can write.
     }
 
     // Settings: Anyone can read, only admin can write
     match /settings/contact {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if true; // Warning: No authentication as requested. Anyone can write.
     }
   }
 }

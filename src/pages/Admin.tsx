@@ -6,7 +6,7 @@ import { useData } from '../context/DataContext';
 const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || '6913'; // 환경변수가 없을 경우 기본값으로 6913 사용
 
 export default function Admin() {
-  const { projects, logs, contact, updateProjects, updateLogs, updateContact } = useData();
+  const { projects, logs, contact, updateProjects, updateLogs, updateContact, deleteProject, deleteLog } = useData();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
@@ -79,15 +79,22 @@ export default function Admin() {
     setEditingProject(normalized);
   };
 
-  const saveProject = () => {
+  const saveProject = async () => {
     if (!editingProject) return;
-    if (editingProject.id.startsWith('new-')) {
-      const newProject = { ...editingProject, id: Math.random().toString(36).substr(2, 9) };
-      updateProjects([newProject, ...projects]);
-    } else {
-      updateProjects(projects.map(p => p.id === editingProject.id ? editingProject : p));
+    try {
+      if (editingProject.id.startsWith('new-')) {
+        const newId = Math.random().toString(36).substr(2, 9);
+        const newProject = { ...editingProject, id: newId };
+        await updateProjects([newProject, ...projects]);
+      } else {
+        await updateProjects(projects.map(p => p.id === editingProject.id ? editingProject : p));
+      }
+      setEditingProject(null);
+      alert('프로젝트가 성공적으로 저장되었습니다!');
+    } catch (error) {
+      console.error('Save project error:', error);
+      alert('프로젝트 저장에 실패했습니다.');
     }
-    setEditingProject(null);
   };
 
   const createNewProject = () => {
@@ -108,9 +115,13 @@ export default function Admin() {
     setEditingProject(newProject);
   };
 
-  const deleteProject = (id: string) => {
+  const deleteProjectHandler = async (id: string) => {
     if (window.confirm('프로젝트를 삭제하시겠습니까?')) {
-      updateProjects(projects.filter(p => p.id !== id));
+      try {
+        await deleteProject(id);
+      } catch (error) {
+        alert('삭제에 실패했습니다.');
+      }
     }
   };
 
@@ -133,20 +144,31 @@ export default function Admin() {
     });
   };
 
-  const saveLog = () => {
+  const saveLog = async () => {
     if (!editingLog) return;
-    if (editingLog.id.startsWith('new-')) {
-      const newLog = { ...editingLog, id: Math.random().toString(36).substr(2, 9) };
-      updateLogs([newLog, ...logs]);
-    } else {
-      updateLogs(logs.map(l => l.id === editingLog.id ? editingLog : l));
+    try {
+      if (editingLog.id.startsWith('new-')) {
+        const newId = Math.random().toString(36).substr(2, 9);
+        const newLog = { ...editingLog, id: newId };
+        await updateLogs([newLog, ...logs]);
+      } else {
+        await updateLogs(logs.map(l => l.id === editingLog.id ? editingLog : l));
+      }
+      setEditingLog(null);
+      alert('기록이 성공적으로 저장되었습니다!');
+    } catch (error) {
+      console.error('Save log error:', error);
+      alert('기록 저장에 실패했습니다.');
     }
-    setEditingLog(null);
   };
 
-  const deleteLog = (id: string) => {
+  const deleteLogHandler = async (id: string) => {
     if (window.confirm('정말 삭제하시겠습니까?')) {
-      updateLogs(logs.filter(l => l.id !== id));
+      try {
+        await deleteLog(id);
+      } catch (error) {
+        alert('삭제에 실패했습니다.');
+      }
     }
   };
 
@@ -563,7 +585,7 @@ export default function Admin() {
                       {p.published ? <Eye size={14} /> : <EyeOff size={14} />}
                     </button>
                     <button 
-                      onClick={() => deleteProject(p.id)}
+                      onClick={() => deleteProjectHandler(p.id)}
                       className="p-1.5 hover:bg-red-50 rounded-md text-red-500 transition-colors"
                     >
                       <Trash2 size={14} />
@@ -610,7 +632,7 @@ export default function Admin() {
                       <Edit3 size={14} />
                     </button>
                     <button 
-                      onClick={() => deleteLog(l.id)}
+                      onClick={() => deleteLogHandler(l.id)}
                       className="p-1.5 hover:bg-red-50 rounded-md text-red-500 transition-colors"
                     >
                       <Trash2 size={14} />
@@ -644,7 +666,18 @@ export default function Admin() {
                   className="w-full px-3 py-2 border border-neutral-200 rounded-md focus:outline-none focus:ring-1 focus:ring-brand font-normal text-sm"
                 />
               </div>
-              <button className="bg-brand text-white px-[17px] py-[7px] rounded-md text-xs font-bold flex items-center gap-2 hover:scale-[1.02] transition-transform">
+              <button 
+                onClick={async () => {
+                  try {
+                    await updateContact(contact);
+                    alert('연락처 정보가 성공적으로 저장되었습니다!');
+                  } catch (e) {
+                    console.error('Save contact error:', e);
+                    alert('저장에 실패했습니다.');
+                  }
+                }} 
+                className="bg-brand text-white px-[17px] py-[7px] rounded-md text-xs font-bold flex items-center gap-2 hover:scale-[1.02] transition-transform"
+              >
                 <Save size={14} /> 변경사항 저장
               </button>
             </div>
