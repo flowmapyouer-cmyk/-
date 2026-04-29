@@ -35,7 +35,7 @@ export default function Home() {
           <span className="text-[10px] md:text-xs font-bold text-white uppercase tracking-[0.2em] mb-10 block opacity-60">
             Product Manager
           </span>
-          <h1 className="text-3xl md:text-5xl lg:text-7xl font-display font-bold leading-[1.25] tracking-tight mb-10 text-white">
+          <h1 className="text-[20px] md:text-[22px] font-display font-bold leading-[1.3] tracking-tight mb-10 text-white">
             사용자도 인식하지 못한 불편을 찾아내고,<br />
             <span className="text-point">검증</span>으로 바꾸는 PM을 지향합니다.
           </h1>
